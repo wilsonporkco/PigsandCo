@@ -31,5 +31,7 @@ jobs:
       - name: Run fetch
         env:
           PIGSCO_SUPABASE_SERVICE_KEY: ${{ secrets.PIGSCO_SUPABASE_SERVICE_KEY }}
+          SWICKERS_USERNAME: ${{ secrets.SWICKERS_USERNAME }}
+          SWICKERS_PASSWORD: ${{ secrets.SWICKERS_PASSWORD }}
           KILL_DATE: ${{ github.event.inputs.kill_date }}
         run: node swickers-kill.js
