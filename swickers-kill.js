@@ -7,11 +7,8 @@
 //
 // Secrets required (GitHub repo → Settings → Secrets):
 //   PIGSCO_SUPABASE_SERVICE_KEY  — service role key for ekegmhvwtgabwnkadpow
-//
-// Swickers credentials are read from the Supabase table:
-//   swickers_config  (columns: key text, value text)
-//   rows needed:     username | <swickers username>
-//                    password | <swickers password>
+//   SWICKERS_USERNAME            — your Swickers login username
+//   SWICKERS_PASSWORD            — your Swickers login password
 //
 // Optional env var / Actions input:
 //   KILL_DATE  — YYYY-MM-DD, defaults to today (Brisbane time)
@@ -131,26 +128,16 @@ async function insertChunked(sb, table, rows, chunkSize = 500) {
     process.exit(1);
   }
 
+  // 1. Read Swickers credentials from environment / GitHub secrets
+  const swickersUser = process.env.SWICKERS_USERNAME;
+  const swickersPass = process.env.SWICKERS_PASSWORD;
+
+  if (!swickersUser || !swickersPass) {
+    log('ERROR: SWICKERS_USERNAME and SWICKERS_PASSWORD must be set as GitHub secrets.');
+    process.exit(1);
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-  // 1. Fetch Swickers credentials from Supabase
-  log('Fetching Swickers credentials from Supabase...');
-  const { data: configRows, error: configErr } = await sb
-    .from('swickers_config')
-    .select('key, value');
-
-  if (configErr || !configRows) {
-    log('ERROR: Could not read swickers_config: ' + (configErr?.message || 'no data'));
-    process.exit(1);
-  }
-
-  const config = {};
-  configRows.forEach(r => { config[r.key] = r.value; });
-
-  if (!config.username || !config.password) {
-    log('ERROR: swickers_config missing username or password rows.');
-    process.exit(1);
-  }
 
   // 2. Determine target date
   const targetDate = (process.env.KILL_DATE || '').trim() || todayStr();
@@ -163,7 +150,7 @@ async function insertChunked(sb, table, rows, chunkSize = 500) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     acceptDownloads: true,
-    httpCredentials: { username: config.username, password: config.password },
+    httpCredentials: { username: swickersUser, password: swickersPass },
   });
   const page = await context.newPage();
 
