@@ -147,18 +147,25 @@ async function insertChunked(sb, table, rows, chunkSize = 500) {
   if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
 
   log('Launching headless browser...');
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+  });
   const context = await browser.newContext({
     acceptDownloads: true,
     httpCredentials: { username: swickersUser, password: swickersPass },
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 800 },
   });
+  // Hide webdriver flag
+  await context.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); });
   const page = await context.newPage();
 
   let savePath = null;
 
   try {
     log('Navigating to Swickers dashboard...');
-    await page.goto(SWICKERS_DASHBOARD, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(SWICKERS_DASHBOARD, { waitUntil: 'domcontentloaded', timeout: 300000 });
     await page.waitForTimeout(3000);
 
     // Format date as DD-Mon-YYYY to match the page display
