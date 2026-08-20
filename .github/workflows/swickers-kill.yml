@@ -7,6 +7,8 @@ on:
         description: 'Kill date to fetch (YYYY-MM-DD). Leave blank for today (Brisbane time).'
         required: false
         default: ''
+  schedule:
+    - cron: '0 13 * * *'   # 11:00 PM Brisbane (AEST UTC+10), every night
 
 jobs:
   fetch:
