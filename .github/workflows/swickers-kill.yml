@@ -8,12 +8,16 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '0 13 * * *'   # 11:00 PM Brisbane (AEST UTC+10), every night
+    # Brisbane is UTC+10 (no daylight saving)
+    # 9am Brisbane  = 23:00 UTC previous day (Sun–Thu covers Mon–Fri Brisbane)
+    - cron: '0 23 * * 0-4'
+    # 10am–5pm Brisbane = 00:00–07:00 UTC Mon–Fri
+    - cron: '0 0-7 * * 1-5'
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
